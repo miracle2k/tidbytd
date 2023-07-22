@@ -1,10 +1,37 @@
 # tidbytd
 
-Unofficial tidbyt rendering server. Does not replace the official
-Tidbyt server, but rather does background pushes to it.
+The [Tidbyt](https://tidbyt.com/) is an incredibly fun device. Creating custom apps
+for it is fun and easy. But getting to enjoy your own creations isn't. Getting an
+app into the app store can take a while. And of course, you may have private apps that
+simple aren't suitable for public release.
 
-   $ vim config.yaml
+This is a very basic, very much WIP rendering daemon which you can run on your own server.
+You can point it to one or more .star files, and one or more devices, and it will, in regular
+intervals, render the apps and push them to your device via the Tidbyt APIs.
+
+It does *not* serve your Tidbyt device directly.
+
+### Usage
+
+Create a config.yaml file in this format:
+
+```
+devices:
+  foo:
+    id: severely-foobar-ae3
+    api_token: "ey..."
+content:
+- url: /Users/michael/Dev/tidbyt-community/apps/aiclock/ai_clock.star
+  name: aiclock
+- url: https://github.com/tidbyt/community/blob/d1495b92b71fad9b3190f5592d6a82aceec7dbcf/apps/nouns/nouns.star
+  name: nouns
+```
+   
+
+Run:
+
    $ ./tidbytd
+
 
 ### Notes
 
