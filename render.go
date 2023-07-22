@@ -2,12 +2,8 @@ package main
 
 import (
 	"fmt"
-	"image"
-	"io/ioutil"
-	"strings"
-
 	"go.starlark.net/starlark"
-
+	"image"
 	"tidbyt.dev/pixlet/encode"
 	"tidbyt.dev/pixlet/globals"
 	"tidbyt.dev/pixlet/runtime"
@@ -23,18 +19,9 @@ type RenderOpts struct {
 	Height        int
 }
 
-func render(script string, opts RenderOpts, vars map[string]string) ([]byte, error) {
+func render(script []byte, opts RenderOpts, vars map[string]string) ([]byte, error) {
 	globals.Width = opts.Width
 	globals.Height = opts.Height
-
-	if !strings.HasSuffix(script, ".star") {
-		return nil, fmt.Errorf("script file must have suffix .star: %s", script)
-	}
-
-	src, err := ioutil.ReadFile(script)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", script, err)
-	}
 
 	// Remove the print function from the starlark thread if the silent flag is passed.
 	initializers := []runtime.ThreadInitializer{}
@@ -50,7 +37,7 @@ func render(script string, opts RenderOpts, vars map[string]string) ([]byte, err
 	runtime.InitCache(opts.Cache)
 
 	applet := runtime.Applet{}
-	err = applet.LoadWithInitializers(script, src, nil, initializers...)
+	err := applet.LoadWithInitializers("memory file", script, nil, initializers...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load applet: %w", err)
 	}

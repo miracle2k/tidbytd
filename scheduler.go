@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/go-co-op/gocron"
+	"io/ioutil"
+	"strings"
 	"tidbyt.dev/pixlet/runtime"
 	"time"
 )
@@ -12,9 +14,29 @@ func schedule(config Config) {
 
 	cache := runtime.NewInMemoryCache()
 
-	for _, item := range config.Content {
+	for _, contentItem := range config.Content {
+
+		// Avoid loop closure problem
+		item := contentItem
 		_, err := s.Every(60).Seconds().Do(func() {
-			fmt.Printf("render: %s\n", item.URL)
+			fmt.Printf("process: %s\n", item.URL)
+
+			// Detect if item.URL is a local path
+			var content []byte
+			var err error
+			if strings.HasPrefix(item.URL, "/") {
+				content, err = ioutil.ReadFile(item.URL)
+				if err != nil {
+					fmt.Printf("error: read: %s: %s\n", item.URL, err)
+					return
+				}
+			} else {
+				content, err = fetchUrl(item.URL)
+				if err != nil {
+					fmt.Printf("error: fetch: %s: %s\n", item.URL, err)
+					return
+				}
+			}
 
 			renderVars := map[string]string{}
 			opts := RenderOpts{
@@ -26,7 +48,7 @@ func schedule(config Config) {
 				Width:         64,
 				Height:        32,
 			}
-			image, result := render(item.URL, opts, renderVars)
+			image, result := render(content, opts, renderVars)
 
 			if result != nil {
 				fmt.Printf("error: render: %s %s\n", item.URL, result)
@@ -40,7 +62,7 @@ func schedule(config Config) {
 					DeviceId:       device.Id,
 					InstallationId: item.Name,
 					APIToken:       device.ApiToken,
-					Background:     true,
+					Background:     false,
 				}
 				result = push(image, pushOpts)
 				if result != nil {
@@ -48,6 +70,8 @@ func schedule(config Config) {
 					return
 				}
 			}
+
+			fmt.Printf("done: %s\n", item.URL)
 		})
 
 		if err != nil {
