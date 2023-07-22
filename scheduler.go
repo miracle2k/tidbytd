@@ -62,7 +62,7 @@ func schedule(config Config) {
 					DeviceId:       device.Id,
 					InstallationId: item.Name,
 					APIToken:       device.ApiToken,
-					Background:     false,
+					Background:     true,
 				}
 				result = push(image, pushOpts)
 				if result != nil {
